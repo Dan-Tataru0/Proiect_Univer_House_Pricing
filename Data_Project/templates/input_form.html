@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Web App</title>
+    <link rel="stylesheet">
+</head>
+<style>
+    body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+}
+
+.container {
+    background-color: white;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 500px;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+}
+
+label {
+    display: block;
+    margin: 10px 0 5px;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    margin-right: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #28a745;
+    color: white;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #218838;
+}
+
+</style>
+<body>
+<div class="container">
+    <h1>Predict Property Price</h1>
+    <form id="prediction-form">
+        <label for="lot_size">Lot Size (m2):</label>
+        <input type="number" id="lot_size" name="lot_size" required><br><br>
+
+        <label for="toilet">Number of Toilets:</label>
+        <input type="number" id="toilet" name="toilet" required><br><br>
+
+        <label for="rooms">Number of Rooms:</label>
+        <input type="number" id="rooms" name="rooms" required><br><br>
+
+        <label for="position">Position (1-5):</label>
+        <input type="number" id="position" name="position" required>
+        <small style="color: gray; font-size: smaller;">1 is for a central position, 5 is for a more peripheral location.</small><br><br>
+
+        <label for="garden">Garden Size (m2):</label>
+        <input type="number" id="garden" name="garden" required><br><br>
+
+        <label for="build_year">Build Year:</label>
+        <input type="number" id="build_year" name="build_year" required><br><br>
+
+        <label for="house_type">House Type:</label>
+        <input type="number" id="house_type" name="house_type" required>
+        <small style="color: gray; font-size: smaller;">0 is for a detached house, 1 is for a semi-detached house.</small><br><br>
+
+        <label for="roof">Roof Type (0-3):</label>
+        <input type="number" id="roof" name="roof" required>
+        <small style="color: gray; font-size: smaller;">0 is flat, 1 is pitched, 2 is gabled, 3 is hipped.</small><br><br>
+
+        <label for="price_per_m2">Price per m2:</label>
+        <input type="number" id="price_per_m2" name="price_per_m2" required><br><br>
+
+        <button type="submit">Predict Price</button>
+    </form>
+
+    <h3>Prediction Result:</h3>
+    <p id="result"></p>
+</div>
+
+
+<script>
+document.getElementById("prediction-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+
+    // Colectează toate input-urile
+    var lotSize = parseFloat(document.getElementById("lot_size").value);
+    var buildYear = parseFloat(document.getElementById("build_year").value);
+    var houseType = parseFloat(document.getElementById("house_type").value);
+    var roof = parseFloat(document.getElementById("roof").value);
+    var rooms = parseFloat(document.getElementById("rooms").value);
+    var toilet = parseFloat(document.getElementById("toilet").value);
+    var position = parseFloat(document.getElementById("position").value);
+    var garden = parseFloat(document.getElementById("garden").value);
+    var pricePerM2 = parseFloat(document.getElementById("price_per_m2").value);
+
+    // Validation - Ensure no negative values and roof type between 0 and 3
+    if (isNaN(lotSize) || lotSize <= 0 ||
+        isNaN(buildYear) || buildYear <= 0 ||
+        isNaN(houseType) || houseType < 0 || houseType > 1 ||
+        isNaN(roof) || roof < 0 || roof > 3 ||
+        isNaN(rooms) || rooms <= 0 ||
+        isNaN(toilet) || toilet <= 0 ||
+        isNaN(position) || position < 1 || position > 5 ||
+        isNaN(garden) || garden < 0 ||
+        isNaN(pricePerM2) || pricePerM2 <= 0) {
+        document.getElementById('result').innerText = "Please ensure all fields are filled with valid, positive numbers.";
+        return; // Stop further execution
+    }
+
+    // Trimite datele către server
+    fetch('/predict', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            features: [lotSize, buildYear, houseType, roof, rooms, toilet, position, garden, pricePerM2],
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('result').innerText = `Predicted Price: ${data.prediction.toFixed(2)} Euro`;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        document.getElementById('result').innerText = `Error: ${error.message}`;
+    });
+});
+</script>
+</body>
+</html>
